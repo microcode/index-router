@@ -6,7 +6,8 @@
   "author": "Jesper Svennevid <jesper@microcode.se>",
   "license": "MIT",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "package:lambda": "zip -r lambda.zip lib node_modules *.js package.json"
   },
   "dependencies": {
     "debug": "^4.1.1",

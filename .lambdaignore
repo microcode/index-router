@@ -1,8 +1,0 @@
-.idea
-*.iml
-yarn*.log
-yarn.lock
-.gitignore
-*.zip
-test
-

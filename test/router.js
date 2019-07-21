@@ -128,7 +128,7 @@ describe('Router', function () {
         const json = JSON.parse(/.* = ({.*}).*/.exec(script.innerHTML)[1]);
 
         assert.equal(json.hash, _config.hash);
-        assert.equal(json.assetsUrl, router._assetsUrl);
-        assert.equal(json.apiUrl, router._apiUrl);
+        assert.equal(json.assets_url, router._assetsUrl);
+        assert.equal(json.api_url, router._apiUrl);
     });
 });

@@ -6,5 +6,5 @@ const apiUrl = process.env['API_URL'];
 const router = new Router(assetsUrl, apiUrl);
 
 exports.handler = async function (event) {
-    return router.route(event.path);
+    return router.route(event.path ? event.path : '/');
 };

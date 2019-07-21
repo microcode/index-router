@@ -1,0 +1,19 @@
+{
+  "name": "@microcode/index-router",
+  "version": "0.0.1",
+  "description": "Lambda function to serve site index",
+  "main": "index.js",
+  "author": "Jesper Svennevid <jesper@microcode.se>",
+  "license": "MIT",
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "debug": "^4.1.1",
+    "jsdom": "^15.1.1",
+    "node-fetch": "^2.6.0"
+  },
+  "devDependencies": {
+    "mocha": "^6.2.0"
+  }
+}

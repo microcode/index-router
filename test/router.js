@@ -7,14 +7,15 @@ describe('Router', function () {
     const _manifest = {
         hash: 'TESTHASH',
         apps: [ 'test' ],
-        timestamp: 1234,
-        version: "1.0",
-        default: 'test'
+        default: 'test',
+        config: {
+            timestamp: 1234,
+            clientVersion: "1.0",
+        }
     };
 
     const _config = {
-        "hash": "502cb7bdc81d30de1cde722ee63114bf37a6c0a0",
-        "target": ["/test/"],
+        "cdn_prefix": "https://localhost/",
         "idle_timeout": 1800000
     };
 
@@ -35,7 +36,7 @@ describe('Router', function () {
             switch (url) {
                 case this._assetsUrl + 'manifest.json': return _manifest;
                 case this._assetsUrl + 'test/index.html': return _index;
-                case this._apiUrl + 'test/config.js': return "_app_config = " + JSON.stringify(_config);
+                case this._apiUrl + 'config.json': return _config;
                 default: throw new Error(`URL not matched: ${url}`);
             }
         }

@@ -1,6 +1,7 @@
 const { Router } = require('./lib/router');
 
 const log = require('debug')('index-router');
+const crypto = require('crypto');
 
 const routers = {};
 
@@ -9,21 +10,22 @@ exports.handler = async function (event, context) {
     log("Context", context);
 
     const router = (() => {
+        const assetsUrl = event.stageVariables['ASSETS_URL'];
+        const apiUrl = event.stageVariables['API_URL'];
         const stage = event.requestContext.stage;
 
-        const _r = routers[stage];
+        const hash = crypto.createHash('md5').update(assetsUrl).update(apiUrl).update(stage).digest('hex');
+
+        const _r = routers[hash];
         if (_r) {
-            log(`Retrieving router for '${stage}'`);
+            log(`Retrieving router for '${stage} (${hash})'`);
             return _r;
         }
 
-        const assetsUrl = event.stageVariables['ASSETS_URL'];
-        const apiUrl = event.stageVariables['API_URL'];
-
-        log(`Created router for '${stage}':`, { assetsUrl, apiUrl });
+        log(`Created router for '${stage} (${hash})':`, { assetsUrl, apiUrl });
 
         const _n = new Router(assetsUrl, apiUrl);
-        routers[stage] = _n;
+        routers[hash] = _n;
 
         return _n;
     })();

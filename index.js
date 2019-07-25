@@ -6,8 +6,8 @@ const crypto = require('crypto');
 const routers = {};
 
 exports.handler = async function (event, context) {
-    log("Event", event);
-    log("Context", context);
+    // log("Event", JSON.stringify(event));
+    // log("Context", JSON.stringify(context));
 
     const router = (() => {
         const assetsUrl = event.stageVariables['ASSETS_URL'];

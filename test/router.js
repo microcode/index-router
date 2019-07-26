@@ -78,15 +78,16 @@ describe('Router', function () {
         assert.equal(res.statusCode, 200);
     });
 
-    it('should fetch app index when hitting a sub-path of the app', async function () {
+    it('should redirect to app index when hitting a sub-path of the app', async function () {
         const router = new TestRouter("https://localhost/asset-url/", "https://localhost/api-url/");
 
         const res1 = await router.route("/test/");
         const res2 = await router.route("/test/sub-path");
 
         assert.equal(res1.statusCode, 200);
-        assert.deepEqual(res1, res2);
 
+        assert.equal(res2.statusCode, 301);
+        assert.equal(res2.headers['Location'], '/test/#sub-path');
     });
 
     it('should rewrite relative URLs in app index', async function () {

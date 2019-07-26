@@ -30,5 +30,24 @@ exports.handler = async function (event, context) {
         return _n;
     })();
 
-    return router.route(event.path ? event.path : '/');
+    const cacheAge = (age => {
+        if (!age) {
+            return undefined;
+        }
+
+        return parseInt(age);
+    })(event.stageVariables['CACHE_AGE']);
+
+    const clientAge = (age => {
+        if (!age) {
+            return undefined;
+        }
+
+        return parseInt(age);
+    })(event.stageVariables['CLIENT_AGE']);
+
+    return router.route(event.path ? event.path : '/', {
+        cacheAge,
+        clientAge
+    });
 };

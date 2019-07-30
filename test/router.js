@@ -32,7 +32,7 @@ describe('Router', function () {
         "</html>";
 
     class TestRouter extends Router {
-        async _fetch(url, json) {
+        async _rawFetch(url) {
             switch (url) {
                 case this._assetsUrl + 'manifest.json': return _manifest;
                 case this._assetsUrl + 'test/index.html': return _index;
@@ -42,11 +42,14 @@ describe('Router', function () {
         }
     }
 
-    it('should download manifest when instantiated', async function () {
+    it('should download manifest when routing', async function () {
         const router = new TestRouter("https://localhost/asset-url/", "https://localhost/api-url/");
-        const res = await router._manifestPromise;
 
-        assert.deepEqual(res, _manifest);
+        const res = await router.route("/");
+        const manifest = await router._manifestPromise;
+
+        assert.equal(res.statusCode, 301);
+        assert.deepEqual(manifest, _manifest);
     });
 
     it('should redirect when accessing root path', async function () {

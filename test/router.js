@@ -136,4 +136,85 @@ describe('Router', function () {
         assert.equal(json.assets_url, router._assetsUrl);
         assert.equal(json.api_url, router._apiUrl);
     });
+
+    it('should retry if the config fetch failed initially', async function () {
+        let count = 0;
+
+        class BadConfigRouter extends Router {
+            async _rawFetch(url) {
+                switch (url) {
+                    case this._assetsUrl + 'manifest.json': return _manifest;
+                    case this._assetsUrl + 'test/index.html': return _index;
+                    case this._apiUrl + 'config.json': {
+                        ++count;
+                        throw new Error("Bad config");
+                    }
+                    default: throw new Error(`URL not matched: ${url}`);
+                }
+            }
+        }
+
+        const router = new BadConfigRouter("https://localhost/asset-url/", "https://localhost/api-url/");
+
+        const res1 = await router.route("/test/");
+        const res2 = await router.route("/test/");
+
+        assert.equal(res1.statusCode, 500);
+        assert.equal(res2.statusCode, 500);
+        assert.equal(count, 6);
+    });
+
+    it('should retry if the manifest fetch failed initially', async function () {
+        let count = 0;
+
+        class BadManifestRouter extends Router {
+            async _rawFetch(url) {
+                switch (url) {
+                    case this._assetsUrl + 'manifest.json': {
+                        ++count;
+                        throw new Error("Bad manifest");
+                    }
+                    case this._assetsUrl + 'test/index.html': return _index;
+                    case this._apiUrl + 'config.json': return _config;
+                    default: throw new Error(`URL not matched: ${url}`);
+                }
+            }
+        }
+
+        const router = new BadManifestRouter("https://localhost/asset-url/", "https://localhost/api-url/");
+
+        const res1 = await router.route("/test/");
+        const res2 = await router.route("/test/");
+
+        assert.equal(res1.statusCode, 500);
+        assert.equal(res2.statusCode, 500);
+        assert.equal(count, 6);
+    });
+
+    it('should retry if the index fetch failed initially', async function () {
+        let count = 0;
+
+        class BadIndexRouter extends Router {
+            async _rawFetch(url) {
+                switch (url) {
+                    case this._assetsUrl + 'manifest.json': return _manifest;
+                    case this._assetsUrl + 'test/index.html': {
+                        ++count;
+                        throw new Error("Bad manifest");
+                    }
+                    case this._apiUrl + 'config.json': return _config;
+                    default: throw new Error(`URL not matched: ${url}`);
+                }
+            }
+        }
+
+        const router = new BadIndexRouter("https://localhost/asset-url/", "https://localhost/api-url/");
+
+        const res1 = await router.route("/test/");
+        const res2 = await router.route("/test/");
+
+        assert.equal(res1.statusCode, 500);
+        assert.equal(res2.statusCode, 500);
+        assert.equal(count, 6);
+    });
 });

@@ -1,6 +1,6 @@
 {
   "name": "@microcode/index-router",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Lambda function to serve site index",
   "main": "index.js",
   "author": "Jesper Svennevid <jesper@microcode.se>",

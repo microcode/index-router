@@ -32,7 +32,7 @@ describe('Router', function () {
         "</html>";
 
     class TestRouter extends Router {
-        async _rawFetch(url) {
+        async _doFetch(url, options) {
             switch (url) {
                 case this._assetsUrl + 'manifest.json': return _manifest;
                 case this._assetsUrl + 'test/index.html': return _index;
@@ -141,7 +141,7 @@ describe('Router', function () {
         let count = 0;
 
         class BadConfigRouter extends Router {
-            async _rawFetch(url) {
+            async _doFetch(url, options) {
                 switch (url) {
                     case this._assetsUrl + 'manifest.json': return _manifest;
                     case this._assetsUrl + 'test/index.html': return _index;
@@ -168,7 +168,7 @@ describe('Router', function () {
         let count = 0;
 
         class BadManifestRouter extends Router {
-            async _rawFetch(url) {
+            async _doFetch(url, options) {
                 switch (url) {
                     case this._assetsUrl + 'manifest.json': {
                         ++count;
@@ -195,7 +195,7 @@ describe('Router', function () {
         let count = 0;
 
         class BadIndexRouter extends Router {
-            async _rawFetch(url) {
+            async _doFetch(url, options) {
                 switch (url) {
                     case this._assetsUrl + 'manifest.json': return _manifest;
                     case this._assetsUrl + 'test/index.html': {
@@ -216,5 +216,245 @@ describe('Router', function () {
         assert.equal(res1.statusCode, 500);
         assert.equal(res2.statusCode, 500);
         assert.equal(count, 6);
+    });
+
+    it('should return the proper exception when failing to download manifest', async function () {
+        class BadResponse {
+            constructor() {
+                this.ok = false;
+                this.status = 500;
+                this.statusText = "Internal Error";
+            }
+
+            async text() {
+                return "Access Denied";
+            }
+
+            async json() {
+                return "Access Denied";
+            }
+        }
+
+        class BadIndexRouter extends Router {
+            async _rawFetch(url) {
+                switch (url) {
+                    default: return new BadResponse();
+                }
+            }
+        }
+
+        const router = new BadIndexRouter("https://localhost/asset-url/", "https://localhost/api-url/");
+
+        const res = await router.route("/test/");
+
+        assert.equal(res.statusCode, 500);
+
+        assert.equal(router._manifestPromise, undefined);
+        assert.equal(router._configPromise, undefined);
+        assert.deepEqual(router._indexes, {});
+    });
+
+    it('should return the proper exception when failing to download config', async function () {
+        class ManifestResponse {
+            constructor() {
+                this.ok = true;
+                this.status = 200;
+                this.statusText = "OK";
+            }
+
+            async json() {
+                return _manifest;
+            }
+        }
+
+        class BadResponse {
+            constructor() {
+                this.ok = false;
+                this.status = 500;
+                this.statusText = "Internal Error";
+            }
+
+            async text() {
+                return "Access Denied";
+            }
+
+            async json() {
+                return "Access Denied";
+            }
+        }
+
+        class IndexResponse {
+            constructor() {
+                this.ok = true;
+                this.status = 200;
+                this.statusText = "OK";
+            }
+
+            async text() {
+                return _index;
+            }
+        }
+
+        class BadIndexRouter extends Router {
+            async _rawFetch(url) {
+                switch (url) {
+                    case this._assetsUrl + 'manifest.json': return new ManifestResponse();
+                    case this._assetsUrl + 'test/index.html': return new IndexResponse();
+                    default: return new BadResponse();
+                }
+            }
+        }
+
+        const router = new BadIndexRouter("https://localhost/asset-url/", "https://localhost/api-url/");
+
+        const res = await router.route("/test/");
+
+        assert.equal(res.statusCode, 500);
+
+        assert.notEqual(router._manifestPromise, undefined);
+        assert.equal(router._configPromise, undefined);
+        assert.equal(await Promise.resolve(router._indexes["test"]), _index);
+    });
+
+    it('should return the proper exception when failing to download index', async function () {
+        class ManifestResponse {
+            constructor() {
+                this.ok = true;
+                this.status = 200;
+                this.statusText = "OK";
+            }
+
+            async json() {
+                return _manifest;
+            }
+        }
+
+        class IndexResponse {
+            constructor() {
+                this.ok = true;
+                this.status = 200;
+                this.statusText = "OK";
+            }
+
+            async text() {
+                return _index;
+            }
+        }
+
+
+        class BadResponse {
+            constructor() {
+                this.ok = false;
+                this.status = 500;
+                this.statusText = "Internal Error";
+            }
+
+            async text() {
+                return "Access Denied";
+            }
+
+            async json() {
+                return "Access Denied";
+            }
+        }
+
+        class BadIndexRouter extends Router {
+            async _rawFetch(url) {
+                switch (url) {
+                    case this._assetsUrl + 'manifest.json': return new ManifestResponse();
+                    default: return new BadResponse();
+                }
+            }
+        }
+
+        const router = new BadIndexRouter("https://localhost/asset-url/", "https://localhost/api-url/");
+
+        const res = await router.route("/test/");
+
+        assert.equal(res.statusCode, 500);
+
+        assert.notEqual(router._manifestPromise, undefined);
+        assert.equal(router._configPromise, undefined);
+        assert.deepEqual(router._indexes, {"test": undefined});
+    });
+
+    it('should cache the appropriate data when everything downloads properly', async function () {
+        class ManifestResponse {
+            constructor() {
+                this.ok = true;
+                this.status = 200;
+                this.statusText = "OK";
+            }
+
+            async json() {
+                return _manifest;
+            }
+        }
+
+        class ConfigResponse {
+            constructor() {
+                this.ok = true;
+                this.status = 200;
+                this.statusText = "OK";
+            }
+
+            async json() {
+                return _config;
+            }
+        }
+
+        class IndexResponse {
+            constructor() {
+                this.ok = true;
+                this.status = 200;
+                this.statusText = "OK";
+            }
+
+            async text() {
+                return _index;
+            }
+        }
+
+
+        class BadResponse {
+            constructor() {
+                this.ok = false;
+                this.status = 500;
+                this.statusText = "Internal Error";
+            }
+
+            async text() {
+                return "Access Denied";
+            }
+
+            async json() {
+                return "Access Denied";
+            }
+        }
+
+        class BadIndexRouter extends Router {
+            async _rawFetch(url) {
+                switch (url) {
+                    case this._assetsUrl + 'manifest.json': return new ManifestResponse();
+                    case this._apiUrl + 'config.json': return new ConfigResponse();
+                    default: return new IndexResponse();
+                }
+            }
+        }
+
+        const router = new BadIndexRouter("https://localhost/asset-url/", "https://localhost/api-url/");
+
+        const res = await router.route("/test/");
+
+        assert.equal(res.statusCode, 200);
+
+        const _finalConfig = Object.assign({
+            "assets_url": "https://localhost/asset-url/",
+            "api_url": "https://localhost/api-url/",
+        }, _config);
+
+        assert.equal(await Promise.resolve(router._manifestPromise), _manifest);
+        assert.deepEqual(await Promise.resolve(router._configPromise), _finalConfig);
+        assert.equal(await Promise.resolve(router._indexes["test"]), _index);
     });
 });
